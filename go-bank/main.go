@@ -1,5 +1,7 @@
 package main
 
 func main() {
-	NewPostgresStore()
+	store, _ := NewPostgresStore()
+	s := NewServer(":2000", store)
+	s.RunsServer()
 }

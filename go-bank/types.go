@@ -8,6 +8,7 @@ import (
 
 type APIServer struct {
 	ListenAddress string
+	Storage       Store
 }
 
 type APIFunc func(http.ResponseWriter, *http.Request) error

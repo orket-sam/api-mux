@@ -14,7 +14,7 @@ func NewPostgresStore() (*PostgresStore, error) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer db.Close()
+	// defer db.Close()
 
 	if err := db.Ping(); err != nil {
 		log.Fatal(err.Error())
@@ -24,4 +24,20 @@ func NewPostgresStore() (*PostgresStore, error) {
 
 	return &PostgresStore{db}, err
 
+}
+
+func (s *PostgresStore) CreateAccount(*Account) error {
+
+	query := `insert into account(first_name,last_name,number,balance)values('shanaya','wangari',12536819,129089)`
+	_, err := s.DB.Query(query)
+	return err
+}
+func (s *PostgresStore) UpdateAccount(*Account) error {
+	return nil
+}
+func (s *PostgresStore) DeleteAccount(id int) error {
+	return nil
+}
+func (s *PostgresStore) GetAccountByID(id int) (*Account, error) {
+	return nil, nil
 }

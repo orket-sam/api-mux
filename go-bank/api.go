@@ -2,29 +2,43 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func (s *APIServer) HandlerAccounts(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	return s.Storage.CreateAccount(&Account{})
 }
 
-func NewServer(listenAddress string) *APIServer {
-	return &APIServer{listenAddress}
+func NewServer(listenAddress string, store Store) *APIServer {
+	return &APIServer{listenAddress, store}
 }
 
-func WriteJson(w http.ResponseWriter, v any, status int) {
+func WriteJson(w http.ResponseWriter, v any, status int) error {
 	w.Header().Set("Content-Type", "application/json")
 
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	return json.NewEncoder(w).Encode(v)
 }
 
 func MakeHttpHandler(f APIFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := f(w, r); err != nil {
-			// log.Fatal(err.Error())
-			println("hdj")
+		err := f(w, r)
+		if err != nil {
+			WriteJson(w, err.Error(), 404)
 		}
 	}
+}
+
+func (s *APIServer) RunsServer() {
+	r := mux.NewRouter()
+	r.HandleFunc("/", MakeHttpHandler(s.HandlerAccounts))
+
+	err := http.ListenAndServe(s.ListenAddress, r)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	log.Println("server is up and running")
 }

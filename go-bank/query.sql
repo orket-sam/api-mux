@@ -1,0 +1,1 @@
+insert into account(first_name,last_name,number,balance)values('orket','sam',12536818,1009891);
