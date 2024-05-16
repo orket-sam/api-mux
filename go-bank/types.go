@@ -18,7 +18,7 @@ type Account struct {
 	FirstName  string    `json:"first_name"`
 	LastName   string    `json:"last_name"`
 	Number     string    `json:"account_number"`
-	Balance    int       `json:"balance"`
+	Balance    float64   `json:"balance"`
 	ID         int       `json:"id"`
 }
 
