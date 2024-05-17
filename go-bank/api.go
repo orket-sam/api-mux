@@ -11,6 +11,8 @@ import (
 
 func (s *APIServer) HandlerAccounts(w http.ResponseWriter, r *http.Request) error {
 
+	idString := mux.Vars(r)["id"]
+
 	switch method := r.Method; method {
 	case "POST":
 		return s.HandlerCreateAccount(w, r)
@@ -18,8 +20,13 @@ func (s *APIServer) HandlerAccounts(w http.ResponseWriter, r *http.Request) erro
 		return s.HandlerDeleteAccount(w, r)
 	case "PUT":
 		return s.HandlerUpdateAccount(w, r)
+
 	case "GET":
-		return s.HandlerGetAccountById(w, r)
+		if idString != "" {
+			return s.HandlerGetAccountById(w, r)
+
+		}
+		return s.HandlerGetAllAccounts(w, r)
 	default:
 		return WriteJson(w, "invalid method", 500)
 	}
@@ -27,41 +34,86 @@ func (s *APIServer) HandlerAccounts(w http.ResponseWriter, r *http.Request) erro
 }
 
 func (s *APIServer) HandlerCreateAccount(w http.ResponseWriter, r *http.Request) error {
-	var account Account
-	err := json.NewDecoder(r.Body).Decode(&account)
-	if err != nil {
-		log.Fatal("parsing values failed" + err.Error())
+	createAccReq := new(CreateAccountRequest)
+
+	if err := json.NewDecoder(r.Body).Decode(&createAccReq); err != nil {
+		log.Println("parsing values error " + err.Error())
+		http.Error(w, "parsing values error ", http.StatusBadRequest)
+
+		return nil
+
 	}
-	log.Println(account)
-	return s.Storage.CreateAccount(&account)
+	if err := HandlerCheckCreateAccReqOnCreate(createAccReq, w); err != nil {
+		return nil
+	}
+
+	account := NewAccount(createAccReq.FirstName, createAccReq.LastName)
+	if err := s.Storage.CreateAccount(account); err != nil {
+		log.Println("create acc error: " + err.Error())
+	}
+	return WriteJson(w, createAccReq, 200)
+
+}
+
+func (s *APIServer) HandlerGetAllAccounts(w http.ResponseWriter, r *http.Request) error {
+
+	accounts, err := s.Storage.GetAllAccounts()
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	return WriteJson(w, accounts, 200)
 
 }
 
 func (s *APIServer) HandlerUpdateAccount(w http.ResponseWriter, r *http.Request) error {
 
-	var account Account
-	err := json.NewDecoder(r.Body).Decode(&account)
-	if err != nil {
-		log.Fatal("parsing values failed" + err.Error())
-	}
-	log.Println("feel good")
+	idString := mux.Vars(r)["id"]
+	id, _ := strconv.Atoi(idString)
 
-	return s.Storage.UpdateAccount(&account)
+	var accProfile *CreateAccountRequest
+	if err := json.NewDecoder(r.Body).Decode(&accProfile); err != nil {
+		log.Println("parsing values failed" + err.Error())
+		http.Error(w, "wrong json format", http.StatusBadRequest)
+		return nil
+	}
+
+	if err := s.Storage.UpdateAccount(accProfile, id); err != nil {
+		log.Println("Update account error:" + err.Error())
+		return nil
+	}
+
+	return WriteJson(w, &accProfile, 200)
 }
 
 func (s *APIServer) HandlerDeleteAccount(w http.ResponseWriter, r *http.Request) error {
 
-	idString := mux.Vars(r)["id"]
-	id, _ := strconv.Atoi(idString)
+	id, err := GetID(r)
+	if err != nil {
+		return err
+	}
 
-	return s.Storage.DeleteAccount(id)
+	if err := s.Storage.DeleteAccount(id); err != nil {
+		return WriteJson(w, APIError{err.Error()}, http.StatusBadRequest)
+	} else {
+		return WriteJson(w, "Account deleted succesfully", http.StatusBadRequest)
+	}
+
 }
 
 func (s *APIServer) HandlerGetAccountById(w http.ResponseWriter, r *http.Request) error {
-	idString := mux.Vars(r)["id"]
-	id, _ := strconv.Atoi(idString)
-	account, _ := s.Storage.GetAccountByID(id)
-	return WriteJson(w, account, 200)
+	id, err := GetID(r)
+
+	if err != nil {
+		return err
+
+	}
+	if account, err := s.Storage.GetAccountByID(id); err != nil {
+		// WriteJson(w, APIError{"account not found"}, http.StatusBadRequest)
+		return err
+	} else {
+		return WriteJson(w, account, 200)
+	}
 
 }
 

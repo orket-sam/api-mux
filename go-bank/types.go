@@ -17,18 +17,28 @@ type Account struct {
 	Created_AT time.Time `json:"created_at"`
 	FirstName  string    `json:"first_name"`
 	LastName   string    `json:"last_name"`
-	Number     string    `json:"account_number"`
+	Number     int       `json:"account_number"`
 	Balance    float64   `json:"balance"`
 	ID         int       `json:"id"`
 }
 
+type CreateAccountRequest struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
 type Store interface {
 	CreateAccount(*Account) error
-	UpdateAccount(*Account) error
+	UpdateAccount(*CreateAccountRequest, int) error
 	DeleteAccount(int) error
 	GetAccountByID(int) (*Account, error)
+	GetAllAccounts() ([]*Account, error)
 }
 
 type PostgresStore struct {
 	DB *sql.DB
+}
+
+type APIError struct {
+	Message string `json:"error"`
 }
