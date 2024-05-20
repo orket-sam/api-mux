@@ -144,8 +144,8 @@ func MakeHttpHandler(f APIFunc) http.HandlerFunc {
 
 func (s *APIServer) RunsServer() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", MakeHttpHandler(s.HandlerAccounts))
-	r.HandleFunc("/{id}", MakeHttpHandler(s.HandlerAccounts))
+	r.HandleFunc("/", WithJWT(MakeHttpHandler(s.HandlerAccounts)))
+	r.HandleFunc("/{id}", WithJWT(MakeHttpHandler(s.HandlerAccounts)))
 
 	err := http.ListenAndServe(s.ListenAddress, r)
 	if err != nil {
