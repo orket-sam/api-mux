@@ -2,10 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 )
 
@@ -48,6 +51,18 @@ func (s *APIServer) HandlerCreateAccount(w http.ResponseWriter, r *http.Request)
 	}
 
 	account := NewAccount(createAccReq.FirstName, createAccReq.LastName)
+	tokenString, err := CreateJwt(account)
+	if err != nil {
+
+		return WriteJson(w, APIError{err.Error()}, http.StatusBadRequest)
+	}
+	fmt.Println("JWT:  ", tokenString)
+	if _, err := ValidateJwt(tokenString); err != nil {
+		println("Invalid token")
+	} else {
+		println("************valid token*************")
+
+	}
 	if err := s.Storage.CreateAccount(account); err != nil {
 		log.Println("create acc error: " + err.Error())
 	}
@@ -144,12 +159,25 @@ func MakeHttpHandler(f APIFunc) http.HandlerFunc {
 
 func (s *APIServer) RunsServer() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", WithJwt(MakeHttpHandler(s.HandlerAccounts)))
-	r.HandleFunc("/{id}", MakeHttpHandler(s.HandlerAccounts))
+	r.HandleFunc("/", (MakeHttpHandler(s.HandlerAccounts)))
+	r.HandleFunc("/{id}", WithJwt(MakeHttpHandler(s.HandlerAccounts)))
 
 	err := http.ListenAndServe(s.ListenAddress, r)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	log.Println("server is up and running")
+}
+
+func CreateJwt(account *Account) (string, error) {
+	secret := os.Getenv("secret")
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"name":           account.FirstName,
+		"account_number": account.LastName,
+	})
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }
