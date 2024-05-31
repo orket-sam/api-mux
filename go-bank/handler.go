@@ -22,9 +22,15 @@ func WithJwt(f http.HandlerFunc) http.HandlerFunc {
 
 		tokenString := r.Header.Get("jwt")
 		print(tokenString)
-		_, err := ValidateJwt(tokenString)
+		token, err := ValidateJwt(tokenString)
 		if err != nil {
 			WriteJson(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		claimId := token.Claims.(jwt.MapClaims)["id"]
+		id, _ := GetID(r)
+		if claimId != id {
+			WriteJson(w, "No access", http.StatusForbidden)
 			return
 		}
 		f(w, r)

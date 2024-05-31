@@ -172,8 +172,8 @@ func (s *APIServer) RunsServer() {
 func CreateJwt(account *Account) (string, error) {
 	secret := os.Getenv("secret")
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"name":           account.FirstName,
 		"account_number": account.LastName,
+		"id":             3,
 	})
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
@@ -181,3 +181,9 @@ func CreateJwt(account *Account) (string, error) {
 	}
 	return tokenString, nil
 }
+
+// JWT:   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X251bWJlciI6IlJvY2t5IiwiaWQiOjF9.NNHZ80ne68JR6pHv77J3I6UqfFxR9EW4oyMhI7R245Q   1
+
+// JWT:   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X251bWJlciI6IkdyYWhhbSIsImlkIjoxfQ.0xrKgmgb0bgWWW6UIDSbXlDjUXgevsKMQeACO-PpGVY 2 but jwt used 1
+
+// JWT:   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X251bWJlciI6IkdyYWhhbSIsImlkIjoxfQ.0xrKgmgb0bgWWW6UIDSbXlDjUXgevsKMQeACO-PpGVY  3 right
