@@ -2,22 +2,24 @@ package main
 
 import "net/http"
 
-type ApiError struct {
-	Message string
-}
-
-type APIFunc interface {
-	func(http.ResponseWriter, *http.Request) error
-}
+type APIFunc func(http.ResponseWriter, *http.Request) error
 
 type APIServer struct {
 	ListenAddress string
 }
 
-func (e *ApiError) Error() string {
-	return e.Message
+type APIError struct {
+	Message string
 }
 
 func NewAPIServer(listenAddress string) *APIServer {
+
 	return &APIServer{listenAddress}
+}
+
+type Account struct {
+	FirstName string
+	lastName  string
+	//  floa
+
 }
