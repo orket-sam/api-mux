@@ -1,0 +1,15 @@
+version: '1.29.2'
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: mysecret
+      POSTGRES_USER: orket
+      POSTGRES_DB: go-bank
+    ports:
+      - 5432:5432
