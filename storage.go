@@ -2,29 +2,39 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	_ "github.com/lib/pq"
 )
 
-func ConnectToDb() error {
+func ConnectToDb() (*PostgresStorage, error) {
 	connStr := "user=orket dbname=go-bank sslmode=disable password=mysecret"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err.Error())
+		return nil, err
 	}
 
-	defer db.Close()
-
 	if err := db.Ping(); err != nil {
-		log.Fatal(err)
+		log.Println(err.Error())
+		return nil, err
 
 	} else {
 		log.Println("db connected successfully")
+		return &PostgresStorage{db}, nil
 	}
-	query := "insert into account (first_name,last_name,account_number)values($1,$2,$3)"
-	if _, err := db.Query(query, "sam", "orket", "48728977438"); err != nil {
-		println(err.Error())
+
+}
+
+func (storage *PostgresStorage) CreateAccount(account Account) error {
+	query := "insert into account(first_name,last_name,account_number)values($1,$2,$3)"
+	sqlResult, err := storage.Db.Exec(query, account.FirstName, account.LastName, account.AccountNumber)
+	if err != nil {
+		return &APIError{err.Error()}
+	} else {
+		fmt.Println(sqlResult.RowsAffected())
 	}
+
 	return nil
 }

@@ -10,17 +10,26 @@ import (
 )
 
 func (s *APIServer) AccountHandler(w http.ResponseWriter, r *http.Request) error {
-	return s.CreateAccountHandler(w, r)
+	if r.Method == "POST" {
+		return s.CreateAccountHandler(w, r)
+	}
+	return fmt.Errorf("method not allowed")
 }
 
 func (s *APIServer) CreateAccountHandler(w http.ResponseWriter, r *http.Request) error {
 
 	var newAccount Account
+
+	json.NewDecoder(r.Body).Decode(&newAccount)
 	if len(newAccount.FirstName) == 0 {
 		return WriteJson(w, "first_name and last_name required", 422)
 	}
-	json.NewDecoder(r.Body).Decode(&newAccount)
+	newAccount.AccountNumber = "12345678"
 	fmt.Println(newAccount)
+	if err := s.Db.CreateAccount(newAccount); err != nil {
+		log.Println(err.Error())
+		return WriteJson(w, err.Error(), 500)
+	}
 	return nil
 }
 

@@ -1,7 +1,6 @@
 version: '1.29.2'
 
 services:
-
   db:
     image: postgres
     restart: always
@@ -13,3 +12,4 @@ services:
       POSTGRES_DB: go-bank
     ports:
       - 5432:5432
+  
